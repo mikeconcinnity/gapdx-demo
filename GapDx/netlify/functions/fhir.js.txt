@@ -9,7 +9,7 @@ exports.handler = async (event) => {
 
   const tokenUrl = `${iss}/oauth2/token`;
   const clientId = "db38d687-d037-4422-8848-229eb5d42e23";
-  const redirectUri = "https://clever-gecko-a961d0.netlify.app";
+  const redirectUri = "https://radiant-fairy-14cca1.netlify.app";
 
   const tokenRes = await fetch(tokenUrl, {
     method: "POST",
@@ -30,10 +30,9 @@ exports.handler = async (event) => {
   const patientId = tokenData.patient;
   const fhirBase = iss.replace("/oauth2", "");
 
-  const obsRes = await fetch(
-    `${fhirBase}/Observation?patient=${patientId}&category=vital-signs,laboratory&_count=100`,
-    { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
-  );
+  const obsRes = await fetch(`${fhirBase}/Observation?patient=${patientId}&category=vital-signs,laboratory&_count=100`, {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` }
+  });
 
   const obsData = await obsRes.json();
   const entries = obsData.entry || [];
