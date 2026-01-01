@@ -1,0 +1,3 @@
+/*
+  X-Frame-Options: ALLOW
+  Content-Security-Policy: frame-ancestors https://*.epic.com https://*.epichosted.com self;
