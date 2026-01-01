@@ -1,0 +1,57 @@
+const fetch = require('node-fetch');
+
+exports.handler = async (event) => {
+  const { code, iss } = event.queryStringParameters;
+
+  if (!code || !iss) {
+    return { statusCode: 400, body: "Missing code or iss" };
+  }
+
+  const tokenUrl = `${iss}/oauth2/token`;
+  const clientId = "db38d687-d037-4422-8848-229eb5d42e23";
+  const redirectUri = "https://clever-gecko-a961d0.netlify.app";
+
+  const tokenRes = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    return { statusCode: 400, body: JSON.stringify(tokenData) };
+  }
+
+  const patientId = tokenData.patient;
+  const fhirBase = iss.replace("/oauth2", "");
+
+  const obsRes = await fetch(
+    `${fhirBase}/Observation?patient=${patientId}&category=vital-signs,laboratory&_count=100`,
+    { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
+  );
+
+  const obsData = await obsRes.json();
+  const entries = obsData.entry || [];
+
+  const findings = [];
+  const sbp = entries.find(e => e.resource.code?.coding?.[0]?.code === "8480-6")?.resource.valueQuantity?.value;
+  const hgb = entries.find(e => e.resource.code?.coding?.[0]?.code === "718-7")?.resource.valueQuantity?.value;
+
+  if (sbp && sbp < 90) findings.push({ dx: "Hypotension (shock risk)", evidence: `SBP ${sbp} mmHg` });
+  if (hgb && hgb < 8) findings.push({ dx: "Severe anemia", evidence: `Hgb ${hgb} g/dL` });
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      patientId,
+      patientName: "Epic Sandbox Patient",
+      findings,
+      totalObs: entries.length
+    })
+  };
+};
