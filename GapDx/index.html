@@ -87,7 +87,7 @@
       <div class="glass rounded-3xl p-10 shadow-2xl">
         <div class="flex justify-between items-start mb-10">
           <div>
-            <h1 class="text-5xl font-black text-gray-800" id="patientName">Patient</h1>
+            <h1 class="text-5xl font-black text-gray-800" id="patientName">Loading...</h1>
             <p class="text-2xl text-gray-600 mt-2" id="patientLocation"></p>
           </div>
           <div class="text-right">
@@ -116,7 +116,11 @@
 
   <script>
     const patients = {
-      // your full simulated patients object
+      1005: { name: "Martha Reynolds", location: "Ortho-6", revenue: 76800, vitals: {temp:"97.1°F", rr:"26", sbp:"76", hr:"118"}, findings: [
+        {dx:"Hypovolemic Shock (impending)", rev:42800, evidence:"SBP trend 108 → 92 → 76 mmHg over 12h, UOP 15 mL/hr, tachycardia 118", rationale:"Patient meets shock index >1.0 and SIRS criteria with ongoing volume loss — urgent resuscitation needed."},
+        {dx:"Acute blood-loss anemia (D62)", rev:34000, evidence:"Hgb dropped 12.1 → 8.4 → 6.9 g/dL in 48h, likely post-op bleed", rationale:"Severe acute anemia contributing to hemodynamic instability — requires transfusion and source control."}
+      ]},
+      // keep all your other patients
     };
 
     function showPatient(id) {
@@ -128,29 +132,29 @@
       document.getElementById("listPage").classList.remove("hidden");
     }
 
-    // Real Epic data using official FHIR client
+    // Real Epic data using official fhirclient library
     window.onload = () => {
       FHIR.oauth2.ready()
-        .then(client => client.request("Patient"))
-        .then(patient => {
-          // Real Epic data loaded
-          document.getElementById("patientName").textContent = patient.name[0].text || "Epic Sandbox Patient";
-          document.getElementById("patientLocation").textContent = "Real Epic Sandbox Data";
-          document.getElementById("temp").textContent = "Real Data";
-          document.getElementById("rr").textContent = "Loaded";
-          document.getElementById("sbp").textContent = "Success!";
-          document.getElementById("hr").textContent = "🎉";
+        .then(client => {
+          return client.patient.read().then(patient => {
+            document.getElementById("patientName").textContent = patient.name[0].text || "Epic Sandbox Patient";
+            document.getElementById("patientLocation").textContent = `FHIR ID: ${client.patient.id}`;
+            document.getElementById("temp").textContent = "Real Epic Data";
+            document.getElementById("rr").textContent = "Loaded";
+            document.getElementById("sbp").textContent = "Success!";
+            document.getElementById("hr").textContent = "🎉";
+            document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
 
-          // Real findings (expand with more Observation queries)
-          const list = document.getElementById("diagnosisList");
-          list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic patient data loaded successfully!<br>Full GapDx logic coming soon.</p>";
+            const list = document.getElementById("diagnosisList");
+            list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic patient loaded!<br>Full GapDx findings from real vitals/labs coming next.</p>";
 
-          document.getElementById("listPage").classList.add("hidden");
-          document.getElementById("detailPage").classList.remove("hidden");
+            document.getElementById("listPage").classList.add("hidden");
+            document.getElementById("detailPage").classList.remove("hidden");
+          });
         })
         .catch(err => {
           console.error(err);
-          // Fall back to demo
+          alert("Real Epic data load failed — showing demo. Error: " + err.message);
           showPatient(1005);
         });
     };
