@@ -6,7 +6,7 @@
   <title>GapDx • Real-Time Diagnostic Gap Intelligence</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fhirclient@2.6.0/build/fhir-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); }
     .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.7); }
@@ -19,7 +19,7 @@
 </head>
 <body class="min-h-screen">
 
-  <!-- Patient List Page (Demo Mode) -->
+  <!-- Patient List Page -->
   <div id="listPage">
     <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
       <div class="max-w-7xl mx-auto px-6 py-12 text-center">
@@ -191,26 +191,29 @@
     }
 
     window.onload = () => {
-      const params = new URLSearchParams(window.location.search);
-      const patient = params.get('patient');
+      FHIR.oauth2.ready()
+        .then(client => {
+          client.request("Observation?category=vital-signs,laboratory").then(obsData => {
+            const entries = obsData.entry || [];
 
-      if (patient) {
-        document.getElementById("patientName").textContent = "Epic Sandbox Patient";
-        document.getElementById("patientLocation").textContent = `FHIR ID: ${patient}`;
-        document.getElementById("temp").textContent = "Real Epic";
-        document.getElementById("rr").textContent = "Launch";
-        document.getElementById("sbp").textContent = "Success!";
-        document.getElementById("hr").textContent = "🎉";
-        document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
+            document.getElementById("patientName").textContent = "Epic Sandbox Patient";
+            document.getElementById("patientLocation").textContent = `FHIR ID: ${client.patient.id}`;
+            document.getElementById("temp").textContent = "Real Epic Data";
+            document.getElementById("rr").textContent = "Loaded";
+            document.getElementById("sbp").textContent = "Success!";
+            document.getElementById("hr").textContent = entries.length + " obs";
 
-        const list = document.getElementById("diagnosisList");
-        list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic launch successful!<br>Patient context received. Full data pull ready.</p>";
-
-        document.getElementById("listPage").classList.add("hidden");
-        document.getElementById("detailPage").classList.remove("hidden");
-      } else {
-        showPatient(1005);
-      }
+            const list = document.getElementById("diagnosisList");
+            list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic observations loaded!</p><p class='text-center text-lg text-gray-500'>Number of vitals/labs: " + entries.length + "</p>";
+            document.getElementById("listPage").classList.add("hidden");
+            document.getElementById("detailPage").classList.remove("hidden");
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Real Epic data load failed — showing simulated demo. Error: " + err.message);
+          showPatient(1005);
+        });
     };
   </script>
 </body>
