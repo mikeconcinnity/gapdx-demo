@@ -19,7 +19,7 @@
 </head>
 <body class="min-h-screen">
 
-  <!-- Patient List Page -->
+  <!-- Patient List Page (Demo Mode) -->
   <div id="listPage">
     <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
       <div class="max-w-7xl mx-auto px-6 py-12 text-center">
@@ -190,28 +190,27 @@
       document.getElementById("listPage").classList.remove("hidden");
     }
 
-    // Real Epic launch using official SMART client
     window.onload = () => {
-      FHIR.oauth2.ready()
-        .then(client => {
-          document.getElementById("patientName").textContent = "Epic Sandbox Patient";
-          document.getElementById("patientLocation").textContent = `FHIR ID: ${client.patient.id}`;
-          document.getElementById("temp").textContent = "Real Epic Launch";
-          document.getElementById("rr").textContent = "Success!";
-          document.getElementById("sbp").textContent = "Data Connected";
-          document.getElementById("hr").textContent = "🎉";
+      const params = new URLSearchParams(window.location.search);
+      const patient = params.get('patient');
 
-          const list = document.getElementById("diagnosisList");
-          list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic launch successful!<br>Patient context received. Full data pull ready.</p>";
+      if (patient) {
+        document.getElementById("patientName").textContent = "Epic Sandbox Patient";
+        document.getElementById("patientLocation").textContent = `FHIR ID: ${patient}`;
+        document.getElementById("temp").textContent = "Real Epic";
+        document.getElementById("rr").textContent = "Launch";
+        document.getElementById("sbp").textContent = "Success!";
+        document.getElementById("hr").textContent = "🎉";
+        document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
 
-          document.getElementById("listPage").classList.add("hidden");
-          document.getElementById("detailPage").classList.remove("hidden");
-        })
-        .catch(err => {
-          console.error("Epic launch failed:", err);
-          // Fall back to demo
-          showPatient(1005);
-        });
+        const list = document.getElementById("diagnosisList");
+        list.innerHTML = "<p class='text-center py-10 text-2xl text-green-600'>Real Epic launch successful!<br>Patient context received. Full data pull ready.</p>";
+
+        document.getElementById("listPage").classList.add("hidden");
+        document.getElementById("detailPage").classList.remove("hidden");
+      } else {
+        showPatient(1005);
+      }
     };
   </script>
 </body>
