@@ -189,33 +189,80 @@
       document.getElementById("listPage").classList.remove("hidden");
     }
 
-    window.onload = () => {
+    // Detect Epic EHR Launch and process launch token
+    window.onload = async () => {
       const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
       const iss = params.get('iss');
-      const patient = params.get('patient');
       const launch = params.get('launch');
 
-      if (code || iss || patient || launch) {
-        document.getElementById("patientName").textContent = "Epic Sandbox Patient";
-        document.getElementById("patientLocation").textContent = `FHIR ID: ${patient || "Unknown"}`;
-        document.getElementById("temp").textContent = "Real Epic Launch Detected";
-        document.getElementById("rr").textContent = "Success!";
-        document.getElementById("sbp").textContent = "Parameters Received";
-        document.getElementById("hr").textContent = "🎉";
-        document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
+      if (iss && launch) {
+        try {
+          // Exchange launch token for access token (using client secret flow for sandbox)
+          const tokenUrl = `${iss}/oauth2/token`;
+          const clientId = "db38d687-d037-4422-8848-229eb5d42e23"; // Your non-prod ID
+          const clientSecret = "YOUR_SANDBOX_CLIENT_SECRET"; // Paste your sandbox client secret from App Orchard here
 
-        const list = document.getElementById("diagnosisList");
-        list.innerHTML = `
-          <p class="text-center py-10 text-2xl text-green-600">Real Epic launch successful!</p>
-          <p class="text-center text-lg text-gray-600">Patient ID: ${patient || "Not provided"}</p>
-          <p class="text-center text-lg text-gray-600">Auth Code: ${code ? "Received" : "Not provided"}</p>
-          <p class="text-center text-lg text-gray-600">Launch Token: ${launch || "Not provided"}</p>
-          <p class="text-center text-lg text-gray-600">ISS: ${iss || "Not provided"}</p>
-        `;
+          const tokenRes = await fetch(tokenUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+              assertion: launch, // The launch token is the assertion
+              scope: "patient/Patient.read patient/Observation.read launch launch/patient openid fhirUser",
+              client_id: clientId,
+              client_secret: clientSecret
+            }),
+          });
 
-        document.getElementById("listPage").classList.add("hidden");
-        document.getElementById("detailPage").classList.remove("hidden");
+          const tokenData = await tokenRes.json();
+          if (!tokenData.access_token) throw new Error("Token exchange failed");
+
+          const patientId = tokenData.patient;
+          const fhirBase = iss.replace("/oauth2", "");
+
+          // Pull real observations
+          const obsRes = await fetch(`${fhirBase}/Observation?patient=${patientId}&category=vital-signs,laboratory&_count=100`, {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` }
+          });
+          const obsData = await obsRes.json();
+          const entries = obsData.entry || [];
+
+          // Real GapDx findings
+          const findings = [];
+          const sbp = entries.find(e => e.resource.code?.coding?.[0]?.code === "8480-6")?.resource.valueQuantity?.value;
+          const hgb = entries.find(e => e.resource.code?.coding?.[0]?.code === "718-7")?.resource.valueQuantity?.value;
+
+          if (sbp && sbp < 90) findings.push({ dx: "Hypotension (shock risk)", evidence: `SBP ${sbp} mmHg` });
+          if (hgb && hgb < 8) findings.push({ dx: "Severe anemia", evidence: `Hgb ${hgb} g/dL` });
+
+          document.getElementById("patientName").textContent = "Epic Sandbox Patient";
+          document.getElementById("patientLocation").textContent = `FHIR ID: ${patientId}`;
+          document.getElementById("temp").textContent = "Real Epic Data";
+          document.getElementById("rr").textContent = "Loaded";
+          document.getElementById("sbp").textContent = sbp || "N/A";
+          document.getElementById("hr").textContent = hgb || "N/A";
+          document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
+
+          const list = document.getElementById("diagnosisList");
+          list.innerHTML = "";
+          if (findings.length === 0) {
+            list.innerHTML = "<p class='text-center py-10 text-2xl text-gray-600'>No high-impact gaps detected.</p>";
+          } else {
+            findings.forEach(f => {
+              const card = document.createElement("div");
+              card.className = "glass rounded-3xl p-8 border border-green-200 shadow-lg";
+              card.innerHTML = `<h3 class="text-3xl font-black text-green-700">${f.dx}</h3><p class="mt-4 text-lg text-gray-700">Evidence: ${f.evidence}</p>`;
+              list.appendChild(card);
+            });
+          }
+
+          document.getElementById("listPage").classList.add("hidden");
+          document.getElementById("detailPage").classList.remove("hidden");
+        } catch (err) {
+          console.error(err);
+          alert("Real Epic data load failed — showing static demo. Error: " + err.message);
+          showPatient(1005);
+        }
       } else {
         showPatient(1005);
       }
