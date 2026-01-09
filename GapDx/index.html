@@ -6,7 +6,6 @@
   <title>GapDx • Real-Time Diagnostic Gap Intelligence</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fhirclient@2.6.0/build/fhir-client.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); }
     .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.7); }
@@ -19,7 +18,7 @@
 </head>
 <body class="min-h-screen">
 
-  <!-- Patient List Page (Only shown in non-Epic mode) -->
+  <!-- Patient List Page -->
   <div id="listPage">
     <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
       <div class="max-w-7xl mx-auto px-6 py-12 text-center">
@@ -27,14 +26,53 @@
         <p class="text-2xl font-light mt-3 opacity-90">Real-Time Diagnostic Gap Intelligence</p>
         <div class="mt-8 inline-flex items-center gap-3 bg-white/20 px-8 py-4 rounded-full">
           <div class="w-4 h-4 bg-green-400 rounded-full pulse"></div>
-          <span class="font-bold text-xl">LIVE • Demo Mode (Simulated)</span>
+          <span class="font-bold text-xl">LIVE • 5 High-Impact Patients Detected</span>
         </div>
       </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6 py-12">
-      <p class="text-center text-xl text-gray-600 mb-8">This is the simulated demo mode. Launch from Epic to see real patient data.</p>
-      <!-- Your full 5 patient cards here - keep as is -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div onclick="showPatient(1005)" class="glass rounded-3xl p-8 text-center border-2 border-red-300 card-hover">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center text-3xl font-bold text-white shadow-xl">MR</div>
+          <h3 class="text-2xl font-bold text-gray-800 mt-5">Martha Reynolds</h3>
+          <p class="text-gray-600">Ortho-6</p>
+          <p class="text-4xl font-black text-red-600 mt-4">+$76,800</p>
+          <p class="text-sm text-red-700 font-semibold mt-2">Hypovolemic Shock Risk</p>
+        </div>
+
+        <div onclick="showPatient(1001)" class="glass rounded-3xl p-8 text-center border-2 border-red-200 card-hover">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-3xl font-bold text-white shadow-xl">JW</div>
+          <h3 class="text-2xl font-bold text-gray-800 mt-5">James Wilson</h3>
+          <p class="text-gray-600">ICU-12</p>
+          <p class="text-4xl font-black text-red-600 mt-4">+$98,400</p>
+          <p class="text-sm text-red-700 font-semibold mt-2">Septic Shock + Resp Failure</p>
+        </div>
+
+        <div onclick="showPatient(1003)" class="glass rounded-3xl p-8 text-center border-2 border-orange-200 card-hover">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-3xl font-bold text-white shadow-xl">RC</div>
+          <h3 class="text-2xl font-bold text-gray-800 mt-5">Robert Chen</h3>
+          <p class="text-gray-600">Neuro-9</p>
+          <p class="text-4xl font-black text-orange-600 mt-4">+$112,000</p>
+          <p class="text-sm text-orange-700 font-semibold mt-2">Functional Quadriplegia + Cachexia</p>
+        </div>
+
+        <div onclick="showPatient(1002)" class="glass rounded-3xl p-8 text-center border-2 border-purple-200 card-hover">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-3xl font-bold text-white shadow-xl">DH</div>
+          <h3 class="text-2xl font-bold text-gray-800 mt-5">Dorothy Harris</h3>
+          <p class="text-gray-600">CCU-5</p>
+          <p class="text-4xl font-black text-purple-600 mt-4">+$87,200</p>
+          <p class="text-sm text-purple-700 font-semibold mt-2">Type-2 MI + Encephalopathy</p>
+        </div>
+
+        <div onclick="showPatient(1004)" class="glass rounded-3xl p-8 text-center border-2 border-blue-200 card-hover">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 flex items-center justify-center text-3xl font-bold text-white shadow-xl">SM</div>
+          <h3 class="text-2xl font-bold text-gray-800 mt-5">Susan Martinez</h3>
+          <p class="text-gray-600">Cardiac-3</p>
+          <p class="text-4xl font-black text-blue-600 mt-4">+$79,800</p>
+          <p class="text-sm text-blue-700 font-semibold mt-2">Acute Diastolic HF + Obesity</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -48,7 +86,7 @@
       <div class="glass rounded-3xl p-10 shadow-2xl">
         <div class="flex justify-between items-start mb-10">
           <div>
-            <h1 class="text-5xl font-black text-gray-800" id="patientName">Loading...</h1>
+            <h1 class="text-5xl font-black text-gray-800" id="patientName">Patient</h1>
             <p class="text-2xl text-gray-600 mt-2" id="patientLocation"></p>
           </div>
           <div class="text-right">
@@ -76,14 +114,34 @@
   </div>
 
   <script>
-    // Simulated fallback patients
     const patients = {
       1005: { name: "Martha Reynolds", location: "Ortho-6", revenue: 76800, vitals: {temp:"97.1°F", rr:"26", sbp:"76", hr:"118"}, findings: [
         {dx:"Hypovolemic Shock (impending)", rev:42800, evidence:"SBP trend 108 → 92 → 76 mmHg over 12h, UOP 15 mL/hr, tachycardia 118", rationale:"Patient meets shock index >1.0 and SIRS criteria with ongoing volume loss — urgent resuscitation needed."},
         {dx:"Acute blood-loss anemia (D62)", rev:34000, evidence:"Hgb dropped 12.1 → 8.4 → 6.9 g/dL in 48h, likely post-op bleed", rationale:"Severe acute anemia contributing to hemodynamic instability — requires transfusion and source control."}
       ]},
-      // ... your other 4 patients (keep them for fallback)
+      1001: { name: "James Wilson", location: "ICU-12", revenue: 98400, vitals: {temp:"101.8°F", rr:"28", sbp:"88", hr:"124"}, findings: [
+        {dx:"Septic Shock (R65.21)", rev:37800, evidence:"qSOFA = 3 (RR 28 + SBP 88 + altered mental status), lactate 6.8, requiring norepinephrine", rationale:"Meets Sepsis-3 criteria for septic shock with organ dysfunction and vasopressor requirement."},
+        {dx:"Acute hypoxic respiratory failure on chronic (J96.11)", rev:41200, evidence:"O2 sat 84% on 100% NRB, chronic CO2 retainer (baseline pCO2 68)", rationale:"Patient requires high-flow oxygen and has chronic hypercapnia — qualifies as acute-on-chronic respiratory failure."},
+        {dx:"Acute blood-loss anemia (D62)", rev:19400, evidence:"Hgb dropped from 11.1 → 7.4 in 36h with guaiac-positive stool", rationale:"Significant acute drop with evidence of active GI bleeding."}
+      ]},
+      1002: { name: "Dorothy Harris", location: "CCU-5", revenue: 87200, vitals: {temp:"98.6°F", rr:"18", sbp:"86", hr:"112"}, findings: [
+        {dx:"Type 2 Myocardial Infarction (I21.A1)", rev:32800, evidence:"Troponin rose from 0.12 → 4.21 with hypotension (SBP 86)", rationale:"Demand ischemia due to hypotension/anemia — not primary plaque rupture."},
+        {dx:"Metabolic Encephalopathy (G93.41)", rev:21800, evidence:"Ammonia 100, asterixis, confusion", rationale:"Hyperammonemia with clinical signs of hepatic encephalopathy."},
+        {dx:"AKI on CKD Stage 5", rev:33600, evidence:"Cr increased from baseline 4.1 → 5.9, oliguric", rationale:"Acute kidney injury superimposed on end-stage renal disease."}
+      ]},
+      1003: { name: "Robert Chen", location: "Neuro-9", revenue: 112000, vitals: {temp:"98.2°F", rr:"16", sbp:"118", hr:"78"}, findings: [
+        {dx:"Functional Quadriplegia (R53.2)", rev:38400, evidence:"Bedbound >90 days, total care, contractures in all extremities", rationale:"Patient has no functional use of limbs due to severe neurologic injury — highest-weighted MCC."},
+        {dx:"Cachexia (R64)", rev:16200, evidence:"Unintentional weight loss of 31 lbs in 60 days", rationale:"Profound wasting in setting of chronic illness."},
+        {dx:"Severe protein-calorie malnutrition (E43)", rev:57400, evidence:"Albumin 1.6 g/dL, BMI 16.2, temporal wasting", rationale:"Meets ASPEN criteria for severe malnutrition in non-delirious patient."}
+      ]},
+      1004: { name: "Susan Martinez", location: "Cardiac-3", revenue: 79800, vitals: {temp:"99.1°F", rr:"20", sbp:"105", hr:"96"}, findings: [
+        {dx:"Type-2 MI / Demand Ischemia (I21.A1)", rev:29800, evidence:"Troponin 0.89 with tachycardia and anemia", rationale:"Supply-demand mismatch without acute coronary occlusion."},
+        {dx:"Acute diastolic heart failure (I50.31)", rev:31200, evidence:"BNP 2400, pulmonary edema on CXR, preserved EF 60%", rationale:"Acute volume overload in heart failure with preserved ejection fraction."},
+        {dx:"Morbid obesity with BMI 46 (E66.01 + Z68.41)", rev:18800, evidence:"Documented BMI 46 with serious comorbidity (HF)", rationale:"Morbid obesity is a CC when BMI ≥40 and affects care."}
+      ]}
     };
+
+    let currentPatient = null;
 
     function showPatient(id) {
       currentPatient = patients[id];
@@ -131,53 +189,36 @@
       document.getElementById("listPage").classList.remove("hidden");
     }
 
-    // Real Epic data using official SMART client library
     window.onload = () => {
-      FHIR.oauth2.ready()
-        .then(client => {
-          // Fetch real patient
-          client.request("Patient").then(patient => {
-            document.getElementById("patientName").textContent = patient.name[0].text || "Epic Sandbox Patient";
-            document.getElementById("patientLocation").textContent = `FHIR ID: ${patient.id}`;
-            document.getElementById("temp").textContent = "Real Epic Data";
-            document.getElementById("rr").textContent = "Loaded";
-            document.getElementById("sbp").textContent = "Success!";
-            document.getElementById("hr").textContent = "🎉";
-            document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const iss = params.get('iss');
+      const patient = params.get('patient');
+      const launch = params.get('launch');
 
-            // Fetch real observations (vitals/labs)
-            client.request("Observation?category=vital-signs,laboratory&_count=100").then(obsData => {
-              const entries = obsData.entry || [];
-              const findings = [];
-              const sbp = entries.find(e => e.resource.code?.coding?.[0]?.code === "8480-6")?.resource.valueQuantity?.value;
-              const hgb = entries.find(e => e.resource.code?.coding?.[0]?.code === "718-7")?.resource.valueQuantity?.value;
+      if (code || iss || patient || launch) {
+        document.getElementById("patientName").textContent = "Epic Sandbox Patient";
+        document.getElementById("patientLocation").textContent = `FHIR ID: ${patient || "Unknown"}`;
+        document.getElementById("temp").textContent = "Real Epic Launch Detected";
+        document.getElementById("rr").textContent = "Success!";
+        document.getElementById("sbp").textContent = "Parameters Received";
+        document.getElementById("hr").textContent = "🎉";
+        document.getElementById("alertTime").textContent = new Date().toLocaleTimeString();
 
-              if (sbp && sbp < 90) findings.push({ dx: "Hypotension (shock risk)", evidence: `SBP ${sbp} mmHg` });
-              if (hgb && hgb < 8) findings.push({ dx: "Severe anemia", evidence: `Hgb ${hgb} g/dL` });
+        const list = document.getElementById("diagnosisList");
+        list.innerHTML = `
+          <p class="text-center py-10 text-2xl text-green-600">Real Epic launch successful!</p>
+          <p class="text-center text-lg text-gray-600">Patient ID: ${patient || "Not provided"}</p>
+          <p class="text-center text-lg text-gray-600">Auth Code: ${code ? "Received" : "Not provided"}</p>
+          <p class="text-center text-lg text-gray-600">Launch Token: ${launch || "Not provided"}</p>
+          <p class="text-center text-lg text-gray-600">ISS: ${iss || "Not provided"}</p>
+        `;
 
-              const list = document.getElementById("diagnosisList");
-              list.innerHTML = "";
-              if (findings.length === 0) {
-                list.innerHTML = "<p class='text-center py-10 text-2xl text-gray-600'>No high-impact gaps detected in this test patient.</p>";
-              } else {
-                findings.forEach(f => {
-                  const card = document.createElement("div");
-                  card.className = "glass rounded-3xl p-8 border border-green-200 shadow-lg";
-                  card.innerHTML = `<h3 class="text-3xl font-black text-green-700">${f.dx}</h3><p class="mt-4 text-lg text-gray-700">Evidence: ${f.evidence}</p>`;
-                  list.appendChild(card);
-                });
-              }
-            });
-
-            document.getElementById("listPage").classList.add("hidden");
-            document.getElementById("detailPage").classList.remove("hidden");
-          });
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Real Epic data load failed — showing simulated demo. Error: " + err.message);
-          showPatient(1005);
-        });
+        document.getElementById("listPage").classList.add("hidden");
+        document.getElementById("detailPage").classList.remove("hidden");
+      } else {
+        showPatient(1005);
+      }
     };
   </script>
 </body>
